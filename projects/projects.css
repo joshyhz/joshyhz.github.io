@@ -1,0 +1,114 @@
+/* elements styling */
+
+* {
+    box-sizing: border-box;
+}
+
+hr {
+    margin-top: 2em;
+    margin-bottom: 0;
+}
+
+hr.minor-hr {
+    margin: 0.5em 0;
+}
+
+/* main card */
+
+.card {
+    margin: 2em 0;
+    z-index: 0;
+    box-shadow: 0 5px 10px 0 rgb(0,0,0,0.2);
+    border-radius: 1em;
+}
+
+.card-body {
+    padding: 0 3em 3em;
+}
+
+/* text */
+
+h1 {
+    margin: 1em 0 0.5em;
+    position: relative;
+    display: inline-block;
+}
+
+h1::before {
+    content: ' ';
+    position: absolute;
+    bottom: 0;
+    left: -5px;
+    z-index: -1;
+    width: 110%;
+    height: 15px;
+    background-color: rgba(255, 224, 224, 0.8);
+}
+
+h3 {
+    margin: 1em 0 0.5em;
+}
+
+.card-body p.image-desc {
+    font-weight: bold;
+    margin: 2em 0 0.5em;
+    font-size: 1.2em;
+}
+
+/* images */
+
+.img-container {
+    display: inline;
+}
+
+.img-container img {
+    margin: 1em 1em;
+    border: 1px solid black;
+    max-width: 100%;
+    height: auto;
+}
+
+.img-container img:first-child {
+    margin: 1em 1em;
+    margin-left: 0;
+}
+
+.img-container img:nth-child(2n+1) {
+    margin: 1em 1em;
+    margin-left: 0;
+}
+
+@media only screen and (max-width: 989px) {
+    .img-container img {
+        margin: 1em 1em;
+        margin-left: 0;
+    }
+}
+
+/* header */
+
+.header {
+    background-color: black;
+    color: white;
+    padding: 0.5em 2em;
+    font-size: 0.8rem;
+}
+
+.header a {
+    color: white;
+    text-decoration: none;
+}
+
+.header a:hover {
+    color: #bbbbbb;
+    text-decoration: none;
+}
+
+/* footer */
+
+.footer {
+    background-color: black;
+    color: white;
+    padding: 0.5em 2em;
+    font-size: 0.8rem;
+}

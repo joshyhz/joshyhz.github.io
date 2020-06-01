@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kew</title>
+
+    <!-- Bootstrap -->
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
+
+    <!-- custom CSS -->
+    <link rel="stylesheet" type="text/css" href="../projects.css">
+</head>
+<body>
+
+    <header>
+        <div class="header">
+            <a href="../../index.html#works">&lt; Back</a>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="card">
+            <div class="card-body">
+
+                <h1>Kew</h1>
+                <p>An iOS music player that focuses on bringing personalized sound adjustments, specific to each user, to enhance the music listening experience. Designed with user-friendliness in mind, the app provides smart equalization functionalities through a simple setup process.
+                <br><br>
+                Repo (private) available at: <a href="https://github.com/haozheryap/Kew">https://github.com/haozheryap/Kew</a> (request access <a href="https://forms.gle/TBkMZAWJb3NUyKuh6">here</a>)
+                </p>
+                
+                <hr>
+                
+                <h1>What does it solve?</h1>
+                
+                <p>One of the main issues in equalizer apps existing in the market is having a steep learning curve. Without some basic knowledge about sound, it is difficult to get the effects you desire out of an equalizer software. Predefined settings improve the situation, but often times, every user has a specific set of adjustments that works best for their hearing, and presets are not capable of achieving that.</p>
+
+                <hr>
+                
+                <h1>How does it work?</h1>
+                
+                <p>In short, it simulates 'measuring' of one's hearing capabilities by guiding the user through an easy setup process. It plays two tones at different frequencies at the same decibal level, and the user tries to match the perceived volume of the two tones. This continues on for several pair of tones.
+                <br><br>
+                This approach works as the actual volume vs. the perceived volume differs from person to person. Even the frequency response curve of a standard human's listening is not flat, where we perceive lower frequencies as being softer than higher frequencies. By laying the setup process down into this simple comparison between two tones, the app is able to map out a sound profile that is specific to each user's hearing.</p>
+
+                <hr>
+                
+                <h1>App features</h1>
+                
+                <ul>
+                    <li>Fully-fledged music player with 'now playing' screen, music library sorting + searching, play queue adjustments, playlists etc.</li>
+                    <li>Easy-to-use smart equalization</li>
+                    <li>Metadata and track information about current track (sourced online)</li>
+                    <li>Integration of Spotify and YouTube</li>
+                    <li>Cloud backup of configuration</li>
+                </ul>
+
+                <hr>
+                
+                <h1>Technologies used</h1>
+                
+                <ul>
+                    <li>Built on native Swift for iOS devices</li>
+                    <li>Frameworks by Apple to perform audio processing (e.g. AVFoundation)</li>
+                    <li>Firebase/Firestore</li>
+                    <li>Spotify SDK</li>
+                    <li>YouTube API</li>
+                    <li>Last.fm API for track info and metadata</li>
+                    <li>Visual libraries (e.g. <a href="https://github.com/fulldecent/FDWaveformView">FDWaveformView</a>, <a href="https://github.com/danielgindi/Charts">Charts</a>, <a href="https://github.com/Aufree/ESTMusicIndicator">ESTMusicIndicator</a>)</li>
+                </ul>
+
+                <hr>
+
+                <h1>User interface design</h1>
+                
+                <p>Here are the concept artboards designed in Adobe XD. (These do not reflect the final application completely. Certain tweaks have been made along the development of the app to further improve UI/UX)</p>
+                
+                <h3>Welcome view</h3>
+                <hr class="minor-hr">
+
+                <div class="img-container">
+                    <img src="screenshots/welcome.png" alt="Welcome screen">
+                </div>
+                
+                <h3>Setup process</h3>
+                <hr class="minor-hr">
+                
+                <div class="img-container">
+                    <img src="screenshots/setup-1.png" alt="Setup screen 1">
+                    <img src="screenshots/setup-2.png" alt="Setup screen 2">
+                </div>
+                
+                <h3>Customization</h3>
+                <hr class="minor-hr">
+                
+                <p class="image-desc">Smart adjustment:</p>
+                
+                <div class="img-container">
+                    <img src="screenshots/customize-1.png" alt="Customization 1">
+                </div>
+                
+                <p class="image-desc">Manual adjustment:</p>
+                
+                <div class="img-container">
+                    <img src="screenshots/customize-2.png" alt="Customziation 2">
+                </div>
+                
+                <h3>Main view</h3>
+                <hr class="minor-hr">
+                
+                <div class="img-container">
+                    <img src="screenshots/main-1.png" alt="Main screen">
+                    <img src="screenshots/main-2.png" alt="Main screen action sheet">
+                </div>
+
+                <h3>Now-playing and queue</h3>
+                <hr class="minor-hr">
+                
+                <div class="img-container">
+                    <img src="screenshots/now-playing-1.png" alt="Now Playing 1">
+                    <img src="screenshots/now-playing-2.png" alt="Now Playing 2">
+                    <img src="screenshots/now-playing-3.png" alt="Now Playing Queue">
+                </div>
+                
+                <h3>Playlists</h3>
+                <hr class="minor-hr">
+                
+                <div class="img-container">
+                    <img src="screenshots/playlist-1.png" alt="Playlists main">
+                    <img src="screenshots/playlist-2.png" alt="Playlists view">
+                    <img src="screenshots/playlist-3.png" alt="Add to playlist">
+                </div>
+                
+                <h3>Settings</h3>
+                <hr class="minor-hr">
+                
+                <div class="img-container">
+                    <img src="screenshots/settings.png" alt="Settings">
+                </div>
+                
+                <h3>Spotify integration</h3>
+                <hr class="minor-hr">
+                
+                <div class="img-container">
+                    <img src="screenshots/spotify-1.png" alt="Spotify search">
+                    <img src="screenshots/spotify-2.png" alt="Spotify now-playing">
+                </div>
+                
+                <h3>YouTube integration</h3>
+                <hr class="minor-hr">
+                
+                <div class="img-container">
+                    <img src="screenshots/youtube-1.png" alt="YouTube search">
+                    <img src="screenshots/youtube-2.png" alt="YouTube now-playing">
+                </div>
+        
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <div class="footer text-right">
+            Copyright &copy; 2020 Hao Zher Yap. All rights reserved.
+        </div>
+    </footer>
+</body>
+</html>
+
