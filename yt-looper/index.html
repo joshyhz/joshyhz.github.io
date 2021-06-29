@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>YouTube Looper</title>
+
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+
+  <style>
+    body {
+      display: block;
+    }
+
+    input[type="text"] {
+      padding: 0.6rem 1rem;
+    }
+
+    button {
+      padding: 0.6rem 2rem;
+    }
+
+    div, iframe {
+      text-align: center;
+      margin-bottom: 1rem;
+    }
+
+    h3 {
+      text-align: center;
+    }
+
+    #url-input {
+      width: 360px;
+    }
+
+    input[type="range"] {
+      width: 1000px;
+    }
+
+    .slider-container {
+      display: block;
+    }
+
+    .slider-label, .slider-text {
+      display: inline-block;
+    }
+
+    .slider {
+      display: block;
+      margin: auto;
+    }
+
+    #save-buttons-container {
+      margin-top: 2rem;
+    }
+
+    #ul-container {
+      display: flex;
+    }
+
+    #saved-vids-ul-container, #saved-loops-ul-container {
+      padding: 0 4rem;
+      width: 50%;
+    }
+
+    ul {
+      width: 100%;
+      list-style: none;
+      border: 1px solid black;
+      padding: 0;
+    }
+
+    ul > li {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      padding: 0.4rem 1rem;
+    }
+
+    ul > li > p {
+      grid-column-start: 1;
+      grid-column-end: 4;
+      text-align: left;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    ul > li > button {
+      grid-column-start: 4;
+      grid-column-end: 5;
+      padding: 2px 8px;
+      margin: auto;
+      margin-right: 0;
+    }
+
+    #main-container {
+      display: none;
+    }
+
+    #playback-buttons-container {
+      display: flex;
+      justify-content: center;
+    }
+
+    .playback-button {
+      height: 40px;
+    }
+
+    .playback-button:not(:first-child) {
+      margin-left: 1rem;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="url-container">
+    <input id="url-input" type="text">
+    <button id="load-url-button">Load</button>
+  </div>
+
+  <div id="main-container">
+    <div class="player-container">
+      <div id="player"></div>
+    </div>
+
+    <div id="playback-buttons-container">
+      <button id="play-button" class="playback-button">&#9658;</button>
+      <button id="pause-button" class="playback-button">&#10074;&#10074;</button>
+      <button id="loop-forward-button" class="playback-button">Loop +5s</button>
+      <button id="loop-backward-button" class="playback-button">Loop -5s</button>
+    </div>
+  
+    <div id="start-slider-container" class="slider-container">
+      <p class="slider-label">Start Time:&nbsp;</p>
+      <p id="start-slider-text" class="slider-text">00:00</p>
+      <input id="start-slider" class="slider" type="range" min="0" value="0">
+    </div>
+  
+    <div id="end-slider-container" class="slider-container">
+      <p class="slider-label">End Time:&nbsp;</p>
+      <p id="end-slider-text" class="slider-text">00:00</p>
+      <input id="end-slider" class="slider" type="range" min="0" value="0">
+    </div>
+    
+    <div id="speed-slider-container" class="slider-container">
+      <p class="slider-label">Speed:&nbsp;</p>
+      <p id="speed-slider-text" class="slider-text">1.0</p>
+      <input id="speed-slider" class="slider" type="range" min="0.1" max="2.0" step="0.1" value="1.0">
+    </div>
+  
+    <div id="delay-slider-container" class="slider-container">
+      <p class="slider-label">Delay (s):&nbsp;</p>
+      <p id="delay-slider-text" class="slider-text">1.0</p>
+      <input id="delay-slider" class="slider" type="range" min="0.1" max="2.0" step="0.1" value="1.0">
+    </div>
+  
+    <div id="save-buttons-container">
+      <button id="save-vid-button">Save Video</button>
+      <button id="save-loop-button">Save Loop</button>
+    </div>
+  </div>
+
+  <div id="ul-container">
+    <div id="saved-vids-ul-container">
+      <h3>Saved Videos</h3>
+      <ul id="saved-vids-ul"></ul>
+    </div>
+    <div id="saved-loops-ul-container">
+      <h3>Saved Loops</h3>
+      <ul id="saved-loops-ul"></ul>
+    </div>
+  </div>
+  
+  <!-- The core Firebase JS SDK is always required and must be listed first -->
+  <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
+
+  <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-analytics.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-firestore.js"></script>
+
+  <script>
+    // Your web app's Firebase configuration
+    // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+    var firebaseConfig = {
+      apiKey: "AIzaSyCcLvbiKmIov-L95vzw49GwvQx1wJjAgBA",
+      authDomain: "yt-looper-231f2.firebaseapp.com",
+      projectId: "yt-looper-231f2",
+      storageBucket: "yt-looper-231f2.appspot.com",
+      messagingSenderId: "1034197566006",
+      appId: "1:1034197566006:web:56fb293ee5e3b46be84e97",
+      measurementId: "G-QKTYQW22YF"
+    };
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+    firebase.analytics();
+  </script>
+
+  <script>
+    let $ = window.jQuery;
+
+    let selectedVideoId = null;
+
+    let db = firebase.firestore();
+    db.collection('videos').get().then(function(snapshots) {
+      snapshots.forEach(function(doc) {
+        let docData = doc.data();
+        $('#saved-vids-ul').append(`
+            <li>
+              <p>${ doc.data().videoTitle }</p>
+              <button class="load-vid-button" data-id="${ doc.id }">Load</button>
+            </li>
+          `);
+        });
+    });
+
+    // 2. This code loads the IFrame Player API code asynchronously.
+    var tag = document.createElement('script');
+
+    tag.src = "https://www.youtube.com/iframe_api";
+    var firstScriptTag = document.getElementsByTagName('script')[0];
+    firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+
+    // 3. This function creates an <iframe> (and YouTube player)
+    //    after the API code downloads.
+    var player;
+    
+    function onYouTubeIframeAPIReady() {
+      /* placeholder */
+    }
+
+    // 4. The API will call this function when the video player is ready.
+    function onPlayerReady(event) {
+      let currPlayer = event.target;
+
+      $('#start-slider').attr('max', currPlayer.getDuration());
+      $('#end-slider').attr('max', currPlayer.getDuration());
+
+      $('#start-slider').val(0);  
+      $('#end-slider').val(Math.min(currPlayer.getDuration(), 5));
+      $('#end-slider').change();
+
+      $('#speed-slider').val(1);
+
+      currPlayer.playVideo();
+    }
+
+    // 5. The API calls this function when the player's state changes.
+    //    The function indicates that when playing a video (state=1),
+    //    the player should play for six seconds and then stop.
+    function onPlayerStateChange(event) {
+      /* placeholder */
+    }
+    function stopVideo() {
+      player.stopVideo();
+    }
+
+    // set up listeners
+
+    $('#load-url-button').click(function() {
+      let url = $('#url-input').val();
+      var regExp = /^.*((youtu.be\/)|(v\/)|(\/u\/\w\/)|(embed\/)|(watch\?))\??v?=?([^#&?]*).*/;
+      var match = url.match(regExp);
+      if (match && match[7].length == 11) {
+        let vidId = match[7];
+        loadVideo(vidId);
+        selectedVideoId = null;
+      } else {
+        alert('Invalid YouTube URL');
+      }
+    });
+
+    // during value changes
+    $('#start-slider').on('input change', function() {
+      $('#start-slider-text').text(toMMSS($(this).val()));
+    });
+
+    // after value change
+    $('#start-slider').change(function() {
+      let thisValue = parseInt($(this).val());
+      if (parseInt($('#end-slider').val()) <= thisValue) {
+        $('#end-slider').val(Math.min(thisValue + 5, parseInt($('#end-slider').attr('max'))));
+      }
+      $('#end-slider').change();
+      if (player != null && typeof player.seekTo === 'function') {
+        player.seekTo(thisValue);
+      }
+    });
+
+    // during value changes
+    $('#end-slider').on('input change', function() {
+      $('#end-slider-text').text(toMMSS($(this).val()));
+    });
+
+    // after value change
+    $('#end-slider').change(function() {
+      let thisValue = parseInt($(this).val());
+      if (thisValue <= parseInt($('#start-slider').val())) {
+        $(this).val(Math.min(parseInt($('#start-slider').val()) + 5, parseInt($(this).attr('max'))));
+      }
+      $('#end-slider-text').text(toMMSS($(this).val()));
+    });
+    
+    $('#speed-slider').on('input change', function() {
+      $('#speed-slider-text').text($(this).val());
+      if (player != null && typeof player.setPlaybackRate === 'function') {
+        player.setPlaybackRate(parseFloat($(this).val()));
+      }
+    });
+
+    $('#delay-slider').on('input change', function() {
+      $('#delay-slider-text').text($(this).val());
+    });
+
+    $('#play-button').click(function() {
+      if (player != null && typeof player.playVideo === 'function') {
+        player.playVideo();
+      }
+    });
+
+    $('#pause-button').click(function() {
+      if (player != null && typeof player.pauseVideo === 'function') {
+        player.pauseVideo();
+      }
+    });
+
+    $('#loop-forward-button').click(function() {
+      if (player != null && typeof player.seekTo === 'function') {
+        let startTime = parseInt($('#start-slider').val());
+        let endTime = parseInt($('#end-slider').val());
+        let toMove = Math.min(player.getDuration() - player.getCurrentTime(), 5);
+        $('#start-slider').val(startTime + toMove);
+        $('#end-slider').val(endTime + toMove);
+        $('#start-slider').change();
+        $('#end-slider').change()
+        player.seekTo(startTime + toMove);
+      }
+    });
+
+    $('#loop-backward-button').click(function() {
+      if (player != null && typeof player.seekTo === 'function') {
+        let startTime = parseInt($('#start-slider').val());
+        let endTime = parseInt($('#end-slider').val());
+        let toMove = Math.min(player.getCurrentTime(), 5);
+        $('#start-slider').val(startTime - toMove);
+        $('#end-slider').val(endTime - toMove);
+        $('#start-slider').change();
+        $('#end-slider').change()
+        player.seekTo(startTime - toMove);
+      }
+    });
+
+    $('#save-vid-button').click(function() {
+      if (player != null && typeof player.getVideoData === 'function') {
+        let videoId = player.getVideoData()['video_id'];
+        let videoTitle = player.getVideoData()['title'];
+        db.collection('videos').doc(videoId).get().then(function(doc) {
+          if (doc.exists) {
+            alert('Video already exists. Please load from saved list');
+          } else {
+            db.collection('videos').doc(videoId).set({
+              videoTitle,
+              savedLoops: []
+            });
+            $('#saved-vids-ul').append(`
+              <li>
+                <p>${ videoTitle }</p>
+                <button class="load-vid-button" data-id="${ videoId }">Load</button>
+              </li>
+            `);
+            selectedVideoId = videoId;
+          }
+        });
+      } else {
+        alert('Please load a video first');
+      }
+    });
+
+    $('#save-loop-button').click(function() {
+      if (selectedVideoId != null) {
+        let loopName = prompt('Please enter a name for the loop');
+        if (loopName != null) {
+          let startTime = parseInt($('#start-slider').val());
+          let endTime = parseInt($('#end-slider').val());
+          db.collection('videos').doc(selectedVideoId).get().then(function(doc) {
+            if (doc.exists) {
+              let thisDoc = doc.data();
+              thisDoc.savedLoops.push({
+                name: loopName,
+                startTime,
+                endTime
+              });
+              db.collection('videos').doc(selectedVideoId).set(thisDoc);
+  
+              $('#saved-loops-ul').append(`
+                <li>
+                  <p>${ loopName }</p>
+                  <button class="load-loop-button" data-start-time="${ startTime }" data-end-time="${ endTime }">Load</button>
+                </li>
+              `);
+            } else {
+              alert('Unexpected error. Please consult your son');
+            }
+          });
+        }
+      } else {
+        alert('Please save the video first');
+      }
+    });
+
+    $('body').on('click', '.load-vid-button', function() {
+      selectedVideoId = $(this).data('id');
+      loadVideo(selectedVideoId);
+      db.collection('videos').doc(selectedVideoId).get().then(function(doc) {
+        if (doc.exists) {
+          doc.data().savedLoops.forEach(function(loop) {
+            $('#saved-loops-ul').append(`
+              <li>
+                <p>${ loop.name }</p>
+                <button class="load-loop-button" data-start-time="${ loop.startTime }" data-end-time="${ loop.endTime }">Load</button>
+              </li>
+            `);
+          });
+        } else {
+          alert('Unexpected error. Please consult your son');
+        }
+      });
+    });
+
+    $('body').on('click', '.load-loop-button', function() {
+      let startTime = parseInt($(this).data('start-time'));
+      let endTime = parseInt($(this).data('end-time'));
+      $('#start-slider').val(startTime);
+      $('#start-slider').change();
+      $('#end-slider').val(endTime);
+      $('#end-slider').change();
+      if (player != null) {
+        player.seekTo(startTime, true);
+      }
+    })
+
+    if (window.playbackInterval != null) {
+      clearInterval(window.playbackInterval);
+    }
+
+    let stoppedTime = null;
+    window.playbackInterval = setInterval(function() {
+      if (player != null && typeof player.getCurrentTime === 'function') {
+        let currTime = player.getCurrentTime();
+        let startTime = parseInt($('#start-slider').val());
+        let endTime = parseInt($('#end-slider').val());
+        let delay = parseFloat($('#delay-slider').val());
+        if (currTime > endTime && stoppedTime != player.getCurrentTime()) {
+          player.pauseVideo();
+          stoppedTime = player.getCurrentTime();
+          if (window.seekTimeout != null) {
+            clearTimeout(window.seekTimeout);
+          }
+          window.seekTimeout = setTimeout(function() {
+            player.seekTo(startTime, true);
+            player.playVideo();
+          }, delay * 1000);
+        }
+      }
+    }, 500);
+
+    function toMMSS(seconds) {
+        var sec_num = parseInt(seconds, 10);
+        var minutes = Math.floor(sec_num / 60);
+        var seconds = sec_num - (minutes * 60);
+
+        if (minutes < 10) {minutes = "0"+minutes;}
+        if (seconds < 10) {seconds = "0"+seconds;}
+        return minutes+':'+seconds;
+    }
+
+    function loadVideo(id) {
+      if (player == null) {
+        player = new YT.Player('player', {
+          height: screen.width * 0.609375 * 0.7,
+          width: screen.width * 0.8,
+          videoId: id,
+          playerVars: {
+            'playsinline': 1,
+            'rel': 0
+          },
+          events: {
+            'onReady': onPlayerReady,
+            'onStateChange': onPlayerStateChange
+          }
+        });
+      } else {
+        player.loadVideoById(id, 0);
+      }
+      $('#saved-loops-ul').empty();
+      $('#main-container').show();
+    }
+  </script>
+</body>
+</html>
