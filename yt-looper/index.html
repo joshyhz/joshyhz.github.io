@@ -378,8 +378,10 @@
       var match = url.match(regExp);
       if (match && match[7].length == 11) {
         let vidId = match[7];
-        player.destroy();
-        player = null;
+        if (player != null) {
+          player.destroy();
+          player = null;
+        }
         loadVideo(vidId);
         selectedVideoId = null;
       } else {
