@@ -7,21 +7,33 @@
   <title>YouTube Looper</title>
 
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+  <script src="./html-duration-picker.min.js"></script>
+  <link rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/themes/smoothness/jquery-ui.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
 
   <style>
     body {
       display: block;
     }
 
-    input[type="text"] {
+    input[type="text"]:not(.html-duration-picker) {
       padding: 0.6rem 1rem;
+    }
+
+    .html-duration-picker-wrapper {
+      width: 80px !important;
+    }
+
+    .controlsDivStyle.controls {
+      left: auto !important;
+      right: 17px !important;
     }
 
     button {
       padding: 0.6rem 2rem;
     }
 
-    div, iframe {
+    div:not(#dialog-form):not(.ui-dialog-buttonpane), iframe {
       text-align: center;
       margin-bottom: 1rem;
     }
@@ -34,8 +46,8 @@
       width: 360px;
     }
 
-    input[type="range"] {
-      width: 1000px;
+    .slider-container:nth-of-type(2) {
+      margin-left: 2rem;
     }
 
     .slider-container {
@@ -94,8 +106,14 @@
       margin-right: 0;
     }
 
+    ul > li > .load-loop-button {
+      grid-row: 1;
+      margin-bottom: -8px;
+    }
+
     #main-container {
-      display: none;
+      visibility: hidden;
+      height: 0;
     }
 
     #playback-buttons-container {
@@ -110,10 +128,99 @@
     .playback-button:not(:first-child) {
       margin-left: 1rem;
     }
+
+    #looper-controls-container, #time-controls-container {
+      display: flex;
+      justify-content: center;
+    }
+
+    #time-controls-container {
+      margin-bottom: 0;
+    }
+
+    #end-slider-container {
+      margin-left: 2rem;
+    }
+
+    .ui-dialog .ui-state-error {
+      padding: .3em;
+    }
+
+    .validateTips {
+      border: 1px solid transparent;
+      padding: 0.3em;
+    }
+
+    .loop-title-text {
+      margin-bottom: 0;
+    }
+
+    .loop-desc-text {
+      margin-top: 0;
+      font-size: 0.8rem;
+      color: gray;
+    }
+
+    #dialog-form input.text {
+      margin-bottom: 12px;
+      width: 95%;
+      padding: .4em;
+    }
+
+    #dialog-form fieldset {
+      padding: 0;
+      border: 0;
+      margin-top: 25px;
+    }
+
+    #dialog-form textarea {
+      width: 100%;
+      height: 200px;
+    }
+
+    h1 {
+      font-size: 1.2em;
+      margin: .6em 0;
+    }
+
+    #loop-desc-container {
+      border: 1px solid black;
+      position: absolute;
+      top: 750px;
+      right: 70px;
+      width: 280px;
+      height: 300px;
+      padding: 1rem;
+      box-sizing: border-box;
+      display: none;
+    }
+
+    #loop-desc-container h3 {
+      margin-top: 0;
+    }
   </style>
 </head>
 
 <body>
+  <div id="dialog-form" title="Save Loop">   
+    <form>
+      <fieldset>
+        <label for="name">Name</label>
+        <input type="text" name="name" id="loopName" class="text ui-widget-content ui-corner-all">
+        <label for="description">Description</label>
+        <textarea type="text" name="description" id="loopDesc" class="text ui-widget-content ui-corner-all"></textarea>
+   
+        <!-- Allow form submission with keyboard without duplicating the dialog button -->
+        <input type="submit" tabindex="-1" style="position:absolute; top:-1000px">
+      </fieldset>
+    </form>
+  </div>
+
+  <div id="loop-desc-container">
+    <h3>Loop Description</h3>
+    <p id="loop-desc-text">-</p>
+  </div>
+
   <div class="url-container">
     <input id="url-input" type="text">
     <button id="load-url-button">Load</button>
@@ -129,30 +236,43 @@
       <button id="pause-button" class="playback-button">&#10074;&#10074;</button>
       <button id="loop-forward-button" class="playback-button">Loop +5s</button>
       <button id="loop-backward-button" class="playback-button">Loop -5s</button>
+      <button id="next-loop-button" class="playback-button">Next Loop</button>
     </div>
-  
-    <div id="start-slider-container" class="slider-container">
-      <p class="slider-label">Start Time:&nbsp;</p>
-      <p id="start-slider-text" class="slider-text">00:00</p>
-      <input id="start-slider" class="slider" type="range" min="0" value="0">
+
+    <div id="time-controls-container">
+      <div id="start-slider-container" class="slider-container">
+        <p class="slider-label">Start Time:&nbsp;</p>
+        <input id="start-input" type="text" class="html-duration-picker" data-duration="00:00:00" data-duration-min="00:00:00" data-duration-max="01:00:00" />
+        <!-- <p id="start-slider-text" class="slider-text">00:00</p> -->
+        <!-- <input id="start-slider" class="slider" type="range" min="0" value="0"> -->
+      </div>
+    
+      <div id="end-slider-container" class="slider-container">
+        <p class="slider-label">End Time:&nbsp;</p>
+        <input id="end-input" type="text" class="html-duration-picker" data-duration="00:00:00" data-duration-min="00:00:00" data-duration-max="01:00:00" />
+        <!-- <p id="end-slider-text" class="slider-text">00:00</p> -->
+        <!-- <input id="end-slider" class="slider" type="range" min="0" value="0"> -->
+      </div>
     </div>
-  
-    <div id="end-slider-container" class="slider-container">
-      <p class="slider-label">End Time:&nbsp;</p>
-      <p id="end-slider-text" class="slider-text">00:00</p>
-      <input id="end-slider" class="slider" type="range" min="0" value="0">
+
+    <div id="loop-controls-container">
+      <button id="start-loop-button">Start Loop</button>
+      <button id="end-loop-button" disabled>End Loop</button>
+      <button id="reset-loop-button" disabled>Reset Loop</button>
     </div>
     
-    <div id="speed-slider-container" class="slider-container">
-      <p class="slider-label">Speed:&nbsp;</p>
-      <p id="speed-slider-text" class="slider-text">1.0</p>
-      <input id="speed-slider" class="slider" type="range" min="0.1" max="2.0" step="0.1" value="1.0">
-    </div>
-  
-    <div id="delay-slider-container" class="slider-container">
-      <p class="slider-label">Delay (s):&nbsp;</p>
-      <p id="delay-slider-text" class="slider-text">1.0</p>
-      <input id="delay-slider" class="slider" type="range" min="0.1" max="2.0" step="0.1" value="1.0">
+    <div id="looper-controls-container">
+      <div id="speed-slider-container" class="slider-container">
+        <p class="slider-label">Speed:&nbsp;</p>
+        <p id="speed-slider-text" class="slider-text">1.0</p>
+        <input id="speed-slider" class="slider" type="range" min="0.1" max="2.0" step="0.1" value="1.0">
+      </div>
+    
+      <div id="delay-slider-container" class="slider-container">
+        <p class="slider-label">Delay (s):&nbsp;</p>
+        <p id="delay-slider-text" class="slider-text">0.5</p>
+        <input id="delay-slider" class="slider" type="range" min="0.1" max="2.0" step="0.1" value="0.5">
+      </div>
     </div>
   
     <div id="save-buttons-container">
@@ -232,12 +352,11 @@
     function onPlayerReady(event) {
       let currPlayer = event.target;
 
-      $('#start-slider').attr('max', currPlayer.getDuration());
-      $('#end-slider').attr('max', currPlayer.getDuration());
+      $('#start-input').data('duration-max', toHHMMSS(currPlayer.getDuration()));
+      $('#end-input').data('duration-max', toHHMMSS(currPlayer.getDuration()));
 
-      $('#start-slider').val(0);  
-      $('#end-slider').val(Math.min(currPlayer.getDuration(), 5));
-      $('#end-slider').change();
+      $('#start-input').val("00:00:00");
+      $('#end-input').val(toHHMMSS(currPlayer.getDuration()));
 
       $('#speed-slider').val(1);
 
@@ -250,9 +369,6 @@
     function onPlayerStateChange(event) {
       /* placeholder */
     }
-    function stopVideo() {
-      player.stopVideo();
-    }
 
     // set up listeners
 
@@ -262,42 +378,13 @@
       var match = url.match(regExp);
       if (match && match[7].length == 11) {
         let vidId = match[7];
+        player.destroy();
+        player = null;
         loadVideo(vidId);
         selectedVideoId = null;
       } else {
         alert('Invalid YouTube URL');
       }
-    });
-
-    // during value changes
-    $('#start-slider').on('input change', function() {
-      $('#start-slider-text').text(toMMSS($(this).val()));
-    });
-
-    // after value change
-    $('#start-slider').change(function() {
-      let thisValue = parseInt($(this).val());
-      if (parseInt($('#end-slider').val()) <= thisValue) {
-        $('#end-slider').val(Math.min(thisValue + 5, parseInt($('#end-slider').attr('max'))));
-      }
-      $('#end-slider').change();
-      if (player != null && typeof player.seekTo === 'function') {
-        player.seekTo(thisValue);
-      }
-    });
-
-    // during value changes
-    $('#end-slider').on('input change', function() {
-      $('#end-slider-text').text(toMMSS($(this).val()));
-    });
-
-    // after value change
-    $('#end-slider').change(function() {
-      let thisValue = parseInt($(this).val());
-      if (thisValue <= parseInt($('#start-slider').val())) {
-        $(this).val(Math.min(parseInt($('#start-slider').val()) + 5, parseInt($(this).attr('max'))));
-      }
-      $('#end-slider-text').text(toMMSS($(this).val()));
     });
     
     $('#speed-slider').on('input change', function() {
@@ -323,29 +410,63 @@
       }
     });
 
+    $('#start-loop-button').click(function() {
+      if (player != null && typeof player.getCurrentTime === 'function') {
+        $('#start-input').val(toHHMMSS(player.getCurrentTime()));
+        $('#end-loop-button').prop('disabled', false);
+      }
+    });
+
+    $('#end-loop-button').click(function() {
+      if (player != null && typeof player.getCurrentTime === 'function') {
+        $('#end-input').val(toHHMMSS(player.getCurrentTime()));
+        $('#reset-loop-button').prop('disabled', false);
+        $('#start-loop-button').prop('disabled', true);
+        $(this).prop('disabled', true);
+        player.seekTo(toSeconds($('#start-input').val()));
+      }
+    });
+
+    $('#reset-loop-button').click(function() {
+      if (player != null && typeof player.getDuration === 'function') {
+        $('#start-input').val("00:00:00");
+        $('#end-input').val(toHHMMSS(player.getDuration()));
+        $('#start-loop-button').prop('disabled', false);
+        $('#end-loop-button').prop('disabled', false);
+        $(this).prop('disabled', true);
+      }
+    })
+
     $('#loop-forward-button').click(function() {
       if (player != null && typeof player.seekTo === 'function') {
-        let startTime = parseInt($('#start-slider').val());
-        let endTime = parseInt($('#end-slider').val());
+        let startTime = toSeconds($('#start-input').val());
+        let endTime = toSeconds($('#end-input').val());
         let toMove = Math.min(player.getDuration() - player.getCurrentTime(), 5);
-        $('#start-slider').val(startTime + toMove);
-        $('#end-slider').val(endTime + toMove);
-        $('#start-slider').change();
-        $('#end-slider').change()
+        $('#start-input').val(toHHMMSS(startTime + toMove));
+        $('#end-input').val(toHHMMSS(endTime + toMove));
         player.seekTo(startTime + toMove);
       }
     });
 
     $('#loop-backward-button').click(function() {
       if (player != null && typeof player.seekTo === 'function') {
-        let startTime = parseInt($('#start-slider').val());
-        let endTime = parseInt($('#end-slider').val());
+        let startTime = toSeconds($('#start-input').val());
+        let endTime = toSeconds($('#end-input').val());
         let toMove = Math.min(player.getCurrentTime(), 5);
-        $('#start-slider').val(startTime - toMove);
-        $('#end-slider').val(endTime - toMove);
-        $('#start-slider').change();
-        $('#end-slider').change()
+        $('#start-input').val(toHHMMSS(startTime - toMove));
+        $('#end-input').val(toHHMMSS(endTime - toMove));
         player.seekTo(startTime - toMove);
+      }
+    });
+
+    $('#next-loop-button').click(function() {
+      if (player != null && typeof player.seekTo === 'function') {
+        let startTime = toSeconds($('#start-input').val());
+        let endTime = toSeconds($('#end-input').val());
+        let toMove = Math.min(player.getDuration() - player.getCurrentTime(), endTime - startTime);
+        $('#start-input').val(toHHMMSS(startTime + toMove));
+        $('#end-input').val(toHHMMSS(endTime + toMove));
+        player.seekTo(startTime + toMove);
       }
     });
 
@@ -375,38 +496,6 @@
       }
     });
 
-    $('#save-loop-button').click(function() {
-      if (selectedVideoId != null) {
-        let loopName = prompt('Please enter a name for the loop');
-        if (loopName != null) {
-          let startTime = parseInt($('#start-slider').val());
-          let endTime = parseInt($('#end-slider').val());
-          db.collection('videos').doc(selectedVideoId).get().then(function(doc) {
-            if (doc.exists) {
-              let thisDoc = doc.data();
-              thisDoc.savedLoops.push({
-                name: loopName,
-                startTime,
-                endTime
-              });
-              db.collection('videos').doc(selectedVideoId).set(thisDoc);
-  
-              $('#saved-loops-ul').append(`
-                <li>
-                  <p>${ loopName }</p>
-                  <button class="load-loop-button" data-start-time="${ startTime }" data-end-time="${ endTime }">Load</button>
-                </li>
-              `);
-            } else {
-              alert('Unexpected error. Please consult your son');
-            }
-          });
-        }
-      } else {
-        alert('Please save the video first');
-      }
-    });
-
     $('body').on('click', '.load-vid-button', function() {
       selectedVideoId = $(this).data('id');
       loadVideo(selectedVideoId);
@@ -415,8 +504,9 @@
           doc.data().savedLoops.forEach(function(loop) {
             $('#saved-loops-ul').append(`
               <li>
-                <p>${ loop.name }</p>
-                <button class="load-loop-button" data-start-time="${ loop.startTime }" data-end-time="${ loop.endTime }">Load</button>
+                <p class="loop-title-text">${ loop.name }</p>
+                <p class="loop-desc-text">${ loop.description || '-' }</p>
+                <button class="load-loop-button " data-start-time="${ loop.startTime }" data-end-time="${ loop.endTime }" data-desc="${ loop.description }">Load</button>
               </li>
             `);
           });
@@ -429,10 +519,12 @@
     $('body').on('click', '.load-loop-button', function() {
       let startTime = parseInt($(this).data('start-time'));
       let endTime = parseInt($(this).data('end-time'));
-      $('#start-slider').val(startTime);
-      $('#start-slider').change();
-      $('#end-slider').val(endTime);
-      $('#end-slider').change();
+      $('#start-input').val(toHHMMSS(startTime));
+      $('#end-input').val(toHHMMSS(endTime));
+      $('#start-loop-button').prop('disabled', true);
+      $('#end-loop-button').prop('disabled', true);
+      $('#reset-loop-button').prop('disabled', false);
+      $('#loop-desc-text').text($(this).data('desc') || '-');
       if (player != null) {
         player.seekTo(startTime, true);
       }
@@ -446,8 +538,8 @@
     window.playbackInterval = setInterval(function() {
       if (player != null && typeof player.getCurrentTime === 'function') {
         let currTime = player.getCurrentTime();
-        let startTime = parseInt($('#start-slider').val());
-        let endTime = parseInt($('#end-slider').val());
+        let startTime = toSeconds($('#start-input').val());
+        let endTime = toSeconds($('#end-input').val());
         let delay = parseFloat($('#delay-slider').val());
         if (currTime > endTime && stoppedTime != player.getCurrentTime()) {
           player.pauseVideo();
@@ -463,14 +555,21 @@
       }
     }, 500);
 
-    function toMMSS(seconds) {
-        var sec_num = parseInt(seconds, 10);
-        var minutes = Math.floor(sec_num / 60);
-        var seconds = sec_num - (minutes * 60);
+    function toHHMMSS(seconds) {
+      var sec_num = parseInt(seconds, 10); // don't forget the second param
+      var hours   = Math.floor(sec_num / 3600);
+      var minutes = Math.floor((sec_num - (hours * 3600)) / 60);
+      var seconds = sec_num - (hours * 3600) - (minutes * 60);
 
-        if (minutes < 10) {minutes = "0"+minutes;}
-        if (seconds < 10) {seconds = "0"+seconds;}
-        return minutes+':'+seconds;
+      if (hours   < 10) {hours   = "0"+hours;}
+      if (minutes < 10) {minutes = "0"+minutes;}
+      if (seconds < 10) {seconds = "0"+seconds;}
+      return hours+':'+minutes+':'+seconds;
+    }
+
+    function toSeconds(timeStr) {
+      var a = timeStr.split(':');
+      return (+a[0]) * 60 * 60 + (+a[1]) * 60 + (+a[2]);
     }
 
     function loadVideo(id) {
@@ -492,8 +591,78 @@
         player.loadVideoById(id, 0);
       }
       $('#saved-loops-ul').empty();
-      $('#main-container').show();
+      $('#main-container').css('height', 'auto');
+      $('#main-container').css('visibility', 'visible');
+      $('#loop-desc-container').show();
     }
+
+    // jQuery UI: 'save loop' popup
+
+    function saveLoop() {
+      let loopName = $('#loopName').val();
+      if (loopName == null || loopName === '') {
+        alert('Please enter a name');
+        return;
+      }
+      let loopDesc = $('#loopDesc').val();
+      let startTime = toSeconds($('#start-input').val());
+      let endTime = toSeconds($('#end-input').val());
+      db.collection('videos').doc(selectedVideoId).get().then(function(doc) {
+        if (doc.exists) {
+          let thisDoc = doc.data();
+          thisDoc.savedLoops.push({
+            name: loopName,
+            description: loopDesc,
+            startTime,
+            endTime
+          });
+          db.collection('videos').doc(selectedVideoId).set(thisDoc);
+
+          $('#saved-loops-ul').append(`
+            <li>
+              <p class="loop-title-text">${ loopName }</p>
+              <p class="loop-desc-text">${ loopDesc || '-' }</p>
+              <button class="load-loop-button" data-start-time="${ startTime }" data-end-time="${ endTime }" data-desc="${ loopDesc }">Load</button>
+            </li>
+          `);
+
+          dialog.dialog( "close" );
+        } else {
+          alert('Unexpected error. Please consult your son');
+        }
+      });
+    }
+
+    let dialog, form;
+
+    dialog = $('#dialog-form').dialog({
+      autoOpen: false,
+      height: 400,
+      width: 350,
+      modal: true,
+      buttons: {
+       'Save': saveLoop,
+        Cancel: function() {
+          dialog.dialog('close');
+        }
+      },
+      close: function() {
+        form[ 0 ].reset();
+      }
+    });
+ 
+    form = dialog.find('form').on('submit', function( event ) {
+      event.preventDefault();
+      saveLoop();
+    });
+ 
+    $('#save-loop-button').click(function() {
+      if (selectedVideoId != null) {
+        dialog.dialog('open');
+      } else {
+        alert('Please save the video first');
+      }
+    });
   </script>
 </body>
 </html>
