@@ -20,6 +20,10 @@
       padding: 0.6rem 1rem;
     }
 
+    input[type="range"] {
+      width: 100px;
+    }
+
     .html-duration-picker-wrapper {
       width: 80px !important;
     }
@@ -64,7 +68,7 @@
     }
 
     #save-buttons-container {
-      margin-top: 2rem;
+      margin-top: 1rem;
     }
 
     #ul-container {
@@ -72,8 +76,17 @@
     }
 
     #saved-vids-ul-container, #saved-loops-ul-container {
-      padding: 0 4rem;
-      width: 50%;
+      padding: 0 2rem;
+      width: 33%;
+    }
+
+    #loop-desc-container {
+      border: 1px solid black;
+      padding: 1rem;
+      margin: 0 2rem;
+      width: 33%;
+      /* box-sizing: border-box; */
+      /* display: none; */
     }
 
     ul {
@@ -114,15 +127,31 @@
     #main-container {
       visibility: hidden;
       height: 0;
+      display: flex;
+      width: 100%;
+      margin-bottom: 0 !important;
+    }
+
+    .player-container {
+      width: 1240px;
+    }
+
+    #controls-container {
+      width: calc(100vw - 1240px);
+      padding: 1rem;
+      box-sizing: border-box;
     }
 
     #playback-buttons-container {
       display: flex;
       justify-content: center;
+      flex-direction: column;
+      margin-bottom: 0 !important;
     }
 
     .playback-button {
       height: 40px;
+      vertical-align: bottom;
     }
 
     .playback-button:not(:first-child) {
@@ -132,14 +161,11 @@
     #looper-controls-container, #time-controls-container {
       display: flex;
       justify-content: center;
-    }
-
-    #time-controls-container {
-      margin-bottom: 0;
+      margin-bottom: 0 !important;
     }
 
     #end-slider-container {
-      margin-left: 2rem;
+      margin-left: 0;
     }
 
     .ui-dialog .ui-state-error {
@@ -183,20 +209,12 @@
       margin: .6em 0;
     }
 
-    #loop-desc-container {
-      border: 1px solid black;
-      position: absolute;
-      top: 750px;
-      right: 70px;
-      width: 280px;
-      height: 300px;
-      padding: 1rem;
-      box-sizing: border-box;
-      display: none;
-    }
-
     #loop-desc-container h3 {
       margin-top: 0;
+    }
+
+    #end-loop-button {
+      margin-left: 1rem;
     }
   </style>
 </head>
@@ -216,11 +234,6 @@
     </form>
   </div>
 
-  <div id="loop-desc-container">
-    <h3>Loop Description</h3>
-    <p id="loop-desc-text">-</p>
-  </div>
-
   <div class="url-container">
     <input id="url-input" type="text">
     <button id="load-url-button">Load</button>
@@ -231,54 +244,71 @@
       <div id="player"></div>
     </div>
 
-    <div id="playback-buttons-container">
-      <button id="play-button" class="playback-button">&#9658;</button>
-      <button id="pause-button" class="playback-button">&#10074;&#10074;</button>
-      <button id="loop-forward-button" class="playback-button">Loop +5s</button>
-      <button id="loop-backward-button" class="playback-button">Loop -5s</button>
-      <button id="next-loop-button" class="playback-button">Next Loop</button>
-    </div>
-
-    <div id="time-controls-container">
-      <div id="start-slider-container" class="slider-container">
-        <p class="slider-label">Start Time:&nbsp;</p>
-        <input id="start-input" type="text" class="html-duration-picker" data-duration="00:00:00" data-duration-min="00:00:00" data-duration-max="01:00:00" />
-        <!-- <p id="start-slider-text" class="slider-text">00:00</p> -->
-        <!-- <input id="start-slider" class="slider" type="range" min="0" value="0"> -->
+    <div id="controls-container">
+      <div id="playback-buttons-container">
+        <div class="row">
+          <button id="play-button" class="playback-button">&#9658;</button>
+          <button id="pause-button" class="playback-button">&#10074;&#10074;</button>
+        </div>
+        <div class="row">
+          <button id="loop-forward-button" class="playback-button">+5s</button>
+          <button id="loop-backward-button" class="playback-button">-5s</button>
+        </div>
+        <div class="row">
+          <button id="next-loop-button" class="playback-button">Next Loop</button>
+        </div>
       </div>
-    
-      <div id="end-slider-container" class="slider-container">
-        <p class="slider-label">End Time:&nbsp;</p>
-        <input id="end-input" type="text" class="html-duration-picker" data-duration="00:00:00" data-duration-min="00:00:00" data-duration-max="01:00:00" />
-        <!-- <p id="end-slider-text" class="slider-text">00:00</p> -->
-        <!-- <input id="end-slider" class="slider" type="range" min="0" value="0"> -->
-      </div>
-    </div>
-
-    <div id="loop-controls-container">
-      <button id="start-loop-button">Start Loop</button>
-      <button id="end-loop-button" disabled>End Loop</button>
-      <button id="reset-loop-button" disabled>Reset Loop</button>
-    </div>
-    
-    <div id="looper-controls-container">
-      <div id="speed-slider-container" class="slider-container">
-        <p class="slider-label">Speed:&nbsp;</p>
-        <p id="speed-slider-text" class="slider-text">1.0</p>
-        <input id="speed-slider" class="slider" type="range" min="0.1" max="2.0" step="0.1" value="1.0">
-      </div>
-    
-      <div id="delay-slider-container" class="slider-container">
-        <p class="slider-label">Delay (s):&nbsp;</p>
-        <p id="delay-slider-text" class="slider-text">0.5</p>
-        <input id="delay-slider" class="slider" type="range" min="0.1" max="2.0" step="0.1" value="0.5">
-      </div>
-    </div>
   
-    <div id="save-buttons-container">
-      <button id="save-vid-button">Save Video</button>
-      <button id="save-loop-button">Save Loop</button>
+      <div id="time-controls-container">
+        <div id="start-slider-container" class="slider-container">
+          <p class="slider-label">Start Time:&nbsp;</p>
+          <input id="start-input" type="text" class="html-duration-picker" data-duration="00:00:00" data-duration-min="00:00:00" data-duration-max="01:00:00" />
+          <!-- <p id="start-slider-text" class="slider-text">00:00</p> -->
+          <!-- <input id="start-slider" class="slider" type="range" min="0" value="0"> -->
+        </div>
+      
+        <div id="end-slider-container" class="slider-container">
+          <p class="slider-label">End Time:&nbsp;</p>
+          <input id="end-input" type="text" class="html-duration-picker" data-duration="00:00:00" data-duration-min="00:00:00" data-duration-max="01:00:00" />
+          <!-- <p id="end-slider-text" class="slider-text">00:00</p> -->
+          <!-- <input id="end-slider" class="slider" type="range" min="0" value="0"> -->
+        </div>
+      </div>
+  
+      <div id="loop-controls-container">
+        <div class="row">
+          <button id="start-loop-button">Start</button>
+          <button id="end-loop-button" disabled>End</button>
+        </div>
+        <div class="row">
+          <button id="reset-loop-button" disabled>Reset Loop</button>
+        </div>
+      </div>
+      
+      <div id="looper-controls-container">
+        <div id="speed-slider-container" class="slider-container">
+          <p class="slider-label">Speed:&nbsp;</p>
+          <p id="speed-slider-text" class="slider-text">1.0</p>
+          <input id="speed-slider" class="slider" type="range" min="0.1" max="2.0" step="0.1" value="1.0">
+        </div>
+      
+        <div id="delay-slider-container" class="slider-container">
+          <p class="slider-label">Delay (s):&nbsp;</p>
+          <p id="delay-slider-text" class="slider-text">0.5</p>
+          <input id="delay-slider" class="slider" type="range" min="0.1" max="2.0" step="0.1" value="0.5">
+        </div>
+      </div>
+    
+      <div id="save-buttons-container">
+        <div class="row">
+          <button id="save-vid-button">Save Video</button>
+        </div>
+        <div class="row">
+          <button id="save-loop-button">Save Loop</button>
+        </div>
+      </div>
     </div>
+
   </div>
 
   <div id="ul-container">
@@ -289,6 +319,10 @@
     <div id="saved-loops-ul-container">
       <h3>Saved Loops</h3>
       <ul id="saved-loops-ul"></ul>
+    </div>
+    <div id="loop-desc-container">
+      <h3>Loop Description</h3>
+      <p id="loop-desc-text">-</p>
     </div>
   </div>
   
