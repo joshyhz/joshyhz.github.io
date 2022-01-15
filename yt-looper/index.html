@@ -530,7 +530,7 @@
     $('#start-loop-button').click(function() {
       if (player != null && typeof player.getCurrentTime === 'function') {
         $('#start-input').val(toHHMMSS(player.getCurrentTime()));
-        $('#end-loop-button').prop('disabled', false);
+        // $('#end-loop-button').prop('disabled', false);
       }
     });
 
@@ -538,7 +538,7 @@
       if (player != null && typeof player.getCurrentTime === 'function') {
         $('#end-input').val(toHHMMSS(player.getCurrentTime()));
         $('#reset-loop-button').prop('disabled', false);
-        $('#start-loop-button').prop('disabled', true);
+        // $('#start-loop-button').prop('disabled', true);
         $(this).prop('disabled', true);
         player.seekTo(toSeconds($('#start-input').val()));
       }
@@ -548,8 +548,8 @@
       if (player != null && typeof player.getDuration === 'function') {
         $('#start-input').val("00:00:00");
         $('#end-input').val(toHHMMSS(player.getDuration()));
-        $('#start-loop-button').prop('disabled', false);
-        $('#end-loop-button').prop('disabled', false);
+        // $('#start-loop-button').prop('disabled', false);
+        // $('#end-loop-button').prop('disabled', false);
         $(this).prop('disabled', true);
       }
     })
@@ -672,8 +672,8 @@
       let endTime = parseInt($(this).data('end-time'));
       $('#start-input').val(toHHMMSS(startTime));
       $('#end-input').val(toHHMMSS(endTime));
-      $('#start-loop-button').prop('disabled', true);
-      $('#end-loop-button').prop('disabled', true);
+      // $('#start-loop-button').prop('disabled', true);
+      // $('#end-loop-button').prop('disabled', true);
       $('#reset-loop-button').prop('disabled', false);
       $('#loop-desc-text').text($(this).data('desc') || '-');
       if (player != null) {
