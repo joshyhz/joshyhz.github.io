@@ -539,7 +539,7 @@
         $('#end-input').val(toHHMMSS(player.getCurrentTime()));
         $('#reset-loop-button').prop('disabled', false);
         // $('#start-loop-button').prop('disabled', true);
-        $(this).prop('disabled', true);
+        // $(this).prop('disabled', true);
         player.seekTo(toSeconds($('#start-input').val()));
       }
     });
