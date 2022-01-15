@@ -530,7 +530,7 @@
     $('#start-loop-button').click(function() {
       if (player != null && typeof player.getCurrentTime === 'function') {
         $('#start-input').val(toHHMMSS(player.getCurrentTime()));
-        // $('#end-loop-button').prop('disabled', false);
+        $('#end-loop-button').prop('disabled', false);
       }
     });
 
@@ -549,7 +549,7 @@
         $('#start-input').val("00:00:00");
         $('#end-input').val(toHHMMSS(player.getDuration()));
         // $('#start-loop-button').prop('disabled', false);
-        // $('#end-loop-button').prop('disabled', false);
+        $('#end-loop-button').prop('disabled', false);
         $(this).prop('disabled', true);
       }
     })
