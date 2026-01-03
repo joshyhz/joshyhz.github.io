@@ -291,6 +291,53 @@
       margin-bottom: 0 !important;
     }
 
+    #recent-videos-container {
+      display: flex;
+      flex-direction: column;
+      max-width: 640px;
+      margin: auto;
+      margin-top: 32px;
+    }
+
+    .recent-video {
+      width: 100%;
+      display: flex;
+      gap: 32px;
+      align-self: center;
+      justify-content: space-between;
+    }
+    
+    .recent-video:not(:last-child) {
+      border-bottom: 1px solid lightgray;
+    }
+
+    .recent-video-info {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .recent-video-title {
+      margin-bottom: 8px !important;
+      width: fit-content;
+      text-align: left !important;
+    }
+
+    .recent-video-channel {
+      margin-bottom: 0 !important;
+      color: darkgray;
+      width: fit-content;
+      text-align: left !important;
+    }
+
+    .recent-video-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .recent-video-actions button {
+      height: fit-content;
+    }
+
     @media (max-width: 480px) {
       .desktop-only {
         display: none !important;
@@ -332,6 +379,10 @@
       }
 
       #time-controls-container {
+        flex-direction: column;
+      }
+
+      .recent-video-actions {
         flex-direction: column;
       }
     }
@@ -437,7 +488,7 @@
 
   </div>
 
-  <div id="ul-container" class="desktop-only">
+  <div id="ul-container" style="display: none;">
     <div id="saved-vids-ul-container">
       <h3>Saved Videos</h3>
       <ul id="saved-vids-ul"></ul>
@@ -451,6 +502,8 @@
       <p id="loop-desc-text">-</p>
     </div>
   </div>
+
+  <div id="recent-videos-container"></div>
   
   <!-- The core Firebase JS SDK is always required and must be listed first -->
   <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
@@ -478,6 +531,7 @@
   <script>
     let $ = window.jQuery;
 
+    let pendingRecentVideoSave = false;
     let selectedVideoId = null;
 
     let db = firebase.firestore();
@@ -491,6 +545,43 @@
             </li>
           `);
         });
+    });
+
+    db.collection('config').doc('recent-videos').get().then(function(doc) {
+      const recentVideos = doc.data().videos;
+      for (let i = recentVideos.length - 1; i >= Math.max(0, recentVideos.length - 5); i--) {
+        $('#recent-videos-container').append(`
+          <div class="recent-video">
+            <div class="recent-video-info">
+              <div class="recent-video-title">${ recentVideos[i].title }</div>
+              <div class="recent-video-channel">${ recentVideos[i].channel }</div>
+            </div>
+            <div class="recent-video-actions">
+              <button class="recent-video-play" data-id="${ recentVideos[i].id }">Play</button>
+              <button class="recent-video-remove" data-id="${ recentVideos[i].id }">Remove</button>
+            </div>
+          </div>
+        `);
+      }
+      $('body').on('click', '.recent-video-play', function() {
+        const videoId = $(this).data('id');
+        loadVideo(videoId);
+      });
+      $('body').on('click', '.recent-video-remove', function() {
+        const videoId = $(this).data('id');
+        db.collection('config').doc('recent-videos').get().then(function(doc) {
+          const recentVideos = doc.data().videos;
+          const indexOfSelectedVideo = recentVideos.findIndex(v => v.id === videoId);
+          if (indexOfSelectedVideo >= 0) {
+            recentVideos.splice(indexOfSelectedVideo, 1);
+          }
+          db.collection('config').doc('recent-videos').set({
+            videos: recentVideos
+          }).then(() => {
+            window.location.reload();
+          });
+        });
+      });
     });
 
     // 2. This code loads the IFrame Player API code asynchronously.
@@ -527,6 +618,27 @@
     //    The function indicates that when playing a video (state=1),
     //    the player should play for six seconds and then stop.
     function onPlayerStateChange(event) {
+      if (event.data === -1) {
+        pendingRecentVideoSave = true;
+      } else if (event.data === 1 && pendingRecentVideoSave) {
+        pendingRecentVideoSave = false;
+        const videoData = event.target.getVideoData();
+        db.collection('config').doc('recent-videos').get().then(function(doc) {
+          const recentVideos = doc.data().videos;
+          const indexOfCurrVideo = recentVideos.findIndex(v => v.id === videoData.video_id);
+          if (indexOfCurrVideo >= 0) {
+            recentVideos.splice(indexOfCurrVideo, 1);
+          }
+          recentVideos.push({
+            id: videoData.video_id,
+            channel: videoData.author,
+            title: videoData.title
+          });
+          db.collection('config').doc('recent-videos').set({
+            videos: recentVideos
+          });
+        });
+      }
       /* placeholder */
     }
 
@@ -790,6 +902,7 @@
       $('#main-container').css('height', 'auto');
       $('#main-container').css('visibility', 'visible');
       $('#loop-desc-container').show();
+      $('#recent-videos-container').hide();
     }
 
     // jQuery UI: 'save loop' popup
