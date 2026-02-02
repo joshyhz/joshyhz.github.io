@@ -291,6 +291,14 @@
       margin-bottom: 0 !important;
     }
 
+    #halve-loop-button, #double-loop-button {
+      width: 40px;
+    }
+
+    #prev-loop-button, #next-loop-button {
+      width: 90px;
+    }
+
     #recent-videos-container {
       display: flex;
       flex-direction: column;
@@ -336,6 +344,21 @@
 
     .recent-video-actions button {
       height: fit-content;
+    }
+
+    #notes-dialog {
+      padding: 0;
+    }
+
+    #notes-dialog #notes-text {
+      width: calc(100% - 0.4em - 16px);
+      height: calc(100% - 1rem - 16px);
+      outline: none;
+      appearance: none;
+      border: 1px solid lightgray;
+      border-radius: 2px;
+      padding: 8px;
+      resize: none;
     }
 
     @media (max-width: 480px) {
@@ -404,6 +427,11 @@
     </form>
   </div>
 
+  <div id="notes-dialog" title="Notes">
+    <input type="hidden" autofocus="true" /> <!-- to prevent text area autofocus -->
+    <textarea id="notes-text"></textarea>
+  </div>
+
   <div class="url-container">
     <input id="url-input" type="text">
     <button id="load-url-button">Load</button>
@@ -419,20 +447,19 @@
         <div class="row">
           <button id="play-button" class="playback-button">&#9658;</button>
           <button id="pause-button" class="playback-button">&#10074;&#10074;</button>
+          <button id="notes-button" class="playback-button">&#9998;</button>
         </div>
         <div class="row desktop-only">
           <button id="loop-forward-button" class="playback-button">+5s</button>
           <button id="loop-backward-button" class="playback-button">-5s</button>
         </div>
-        <div class="row desktop-only">
+        <div class="row">
           <button id="halve-loop-button" class="playback-button">x1/2</button>
           <button id="double-loop-button" class="playback-button">x2</button>
         </div>
         <div class="row">
-          <button id="next-loop-button" class="playback-button">Next Loop</button>
-        </div>
-        <div class="row">
           <button id="prev-loop-button" class="playback-button">Previous Loop</button>
+          <button id="next-loop-button" class="playback-button">Next Loop</button>
         </div>
       </div>
   
@@ -534,18 +561,31 @@
     let pendingRecentVideoSave = false;
     let selectedVideoId = null;
 
+    let latestSavedNotes = '';
+
     let db = firebase.firestore();
-    db.collection('videos').get().then(function(snapshots) {
-      snapshots.forEach(function(doc) {
-        let docData = doc.data();
-        $('#saved-vids-ul').append(`
-            <li>
-              <p>${ doc.data().videoTitle }</p>
-              <button class="load-vid-button" data-id="${ doc.id }">Load</button>
-            </li>
-          `);
+    // db.collection('videos').get().then(function(snapshots) {
+    //   snapshots.forEach(function(doc) {
+    //     let docData = doc.data();
+    //     $('#saved-vids-ul').append(`
+    //         <li>
+    //           <p>${ doc.data().videoTitle }</p>
+    //           <button class="load-vid-button" data-id="${ doc.id }">Load</button>
+    //         </li>
+    //       `);
+    //     });
+    // });
+
+    clearInterval(window.ytLooperNotesSyncInterval);
+    window.ytLooperNotesSyncInterval = setInterval(() => {
+      if (selectedVideoId && latestSavedNotes !== $('#notes-text').val()) {
+        db.collection('notes').doc(selectedVideoId).set({
+          text: $('#notes-text').val()
+        }).then(() => {
+          latestSavedNotes = $('#notes-text').val();
         });
-    });
+      }
+    }, 5000);
 
     db.collection('config').doc('recent-videos').get().then(function(doc) {
       const recentVideos = doc.data().videos;
@@ -623,6 +663,7 @@
       } else if (event.data === 1 && pendingRecentVideoSave) {
         pendingRecentVideoSave = false;
         const videoData = event.target.getVideoData();
+        selectedVideoId = videoData.video_id;
         db.collection('config').doc('recent-videos').get().then(function(doc) {
           const recentVideos = doc.data().videos;
           const indexOfCurrVideo = recentVideos.findIndex(v => v.id === videoData.video_id);
@@ -637,6 +678,12 @@
           db.collection('config').doc('recent-videos').set({
             videos: recentVideos
           });
+        });
+        db.collection('notes').doc(videoData.video_id).get().then(function(doc) {
+          if (doc.exists) {
+            latestSavedNotes = doc.data().text;
+            $('#notes-text').val(latestSavedNotes);
+          }
         });
       }
       /* placeholder */
@@ -972,6 +1019,23 @@
         alert('Please save the video first');
       }
     });
+
+    let notesDialog;
+
+    notesDialog = $('#notes-dialog').dialog({
+      autoOpen: false,
+      width: window.innerWidth - 24,
+      height: window.innerHeight - 32,
+      modal: true
+    });
+
+    $('#notes-button').click(function() {
+      if (selectedVideoId != null) {
+        notesDialog.dialog('open');
+      } else {
+        alert('Please select a video first');
+      }
+    });    
   </script>
 </body>
 </html>
