@@ -686,7 +686,6 @@
       } else if (event.data === 1 && pendingRecentVideoSave) {
         pendingRecentVideoSave = false;
         const videoData = event.target.getVideoData();
-        selectedVideoId = videoData.video_id;
         db.collection('config').doc('recent-videos').get().then(function(doc) {
           const recentVideos = doc.data().videos;
           const indexOfCurrVideo = recentVideos.findIndex(v => v.id === videoData.video_id);
@@ -701,12 +700,6 @@
           db.collection('config').doc('recent-videos').set({
             videos: recentVideos
           });
-        });
-        db.collection('notes').doc(videoData.video_id).get().then(function(doc) {
-          if (doc.exists) {
-            latestSavedNotes = doc.data().text;
-            $('#notes-text').val(latestSavedNotes);
-          }
         });
       }
       /* placeholder */
@@ -725,7 +718,6 @@
           player = null;
         }
         loadVideo(vidId);
-        selectedVideoId = null;
       } else {
         alert('Invalid YouTube URL');
       }
@@ -951,6 +943,7 @@
     }
 
     function loadVideo(id) {
+      selectedVideoId = id;
       if (player == null) {
         player = new YT.Player('player', {
           height: screen.width * 0.609375 * 0.7,
@@ -973,6 +966,12 @@
       $('#main-container').css('visibility', 'visible');
       $('#loop-desc-container').show();
       $('#recent-videos-container').hide();
+      db.collection('notes').doc(id).get().then(function(doc) {
+        if (doc.exists) {
+          latestSavedNotes = doc.data().text;
+          $('#notes-text').val(latestSavedNotes);
+        }
+      });
     }
 
     // jQuery UI: 'save loop' popup
