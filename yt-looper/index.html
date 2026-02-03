@@ -585,6 +585,8 @@
     let selectedVideoId = null;
 
     let latestSavedNotes = '';
+    let latestSavedLoopStartTime = 0;
+    let latestSavedLoopEndTime = 0;
 
     let db = firebase.firestore();
     // db.collection('videos').get().then(function(snapshots) {
@@ -599,13 +601,23 @@
     //     });
     // });
 
-    clearInterval(window.ytLooperNotesSyncInterval);
-    window.ytLooperNotesSyncInterval = setInterval(() => {
-      if (selectedVideoId && latestSavedNotes !== $('#notes-text').val()) {
+    clearInterval(window.ytLooperDataSyncInterval);
+    window.ytLooperDataSyncInterval = setInterval(() => {
+      if (!selectedVideoId) {
+        return;
+      }
+      const notesToSave = $('#notes-text').val();
+      const loopStartTimeToSave = toSeconds($('#start-input').val());
+      const loopEndTimeToSave = toSeconds($('#end-input').val());
+      if (latestSavedNotes !== notesToSave || latestSavedLoopStartTime != loopStartTimeToSave || latestSavedLoopEndTime != loopEndTimeToSave) {
         db.collection('notes').doc(selectedVideoId).set({
-          text: $('#notes-text').val()
+          text: notesToSave,
+          loopStartTime: loopStartTimeToSave,
+          loopEndTime: loopEndTimeToSave
         }).then(() => {
-          latestSavedNotes = $('#notes-text').val();
+          latestSavedNotes = notesToSave;
+          latestSavedLoopStartTime = loopStartTimeToSave;
+          latestSavedLoopEndTime = loopEndTimeToSave;
         });
       }
     }, 5000);
@@ -669,12 +681,20 @@
       $('#start-input').data('duration-max', toHHMMSS(currPlayer.getDuration()));
       $('#end-input').data('duration-max', toHHMMSS(currPlayer.getDuration()));
 
-      $('#start-input').val("00:00:00");
-      $('#end-input').val(toHHMMSS(currPlayer.getDuration()));
+      $('#start-input').val(latestSavedLoopStartTime ? toHHMMSS(latestSavedLoopStartTime) : "00:00:00");
+      $('#end-input').val(latestSavedLoopEndTime ? toHHMMSS(latestSavedLoopEndTime) : toHHMMSS(currPlayer.getDuration()));
 
       $('#speed-slider').val(1);
 
       currPlayer.playVideo();
+
+      if (latestSavedLoopEndTime === 0) {
+        latestSavedLoopEndTime = currPlayer.getDuration();
+      }
+
+      if (latestSavedLoopStartTime !== 0) {
+        currPlayer.seekTo(latestSavedLoopStartTime, true);
+      }
     }
 
     // 5. The API calls this function when the player's state changes.
@@ -969,7 +989,16 @@
       db.collection('notes').doc(id).get().then(function(doc) {
         if (doc.exists) {
           latestSavedNotes = doc.data().text;
+          latestSavedLoopStartTime = doc.data().loopStartTime;
+          latestSavedLoopEndTime = doc.data().loopEndTime;
           $('#notes-text').val(latestSavedNotes);
+          $('#start-input').val(toHHMMSS(latestSavedLoopStartTime));
+          $('#end-input').val(toHHMMSS(latestSavedLoopEndTime));
+          $('#end-loop-button').prop('disabled', false);
+          $('#reset-loop-button').prop('disabled', false);
+          if (player != null) {
+            player.seekTo(latestSavedLoopStartTime, true);
+          }
         }
       });
     }
