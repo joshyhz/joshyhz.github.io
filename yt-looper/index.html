@@ -408,6 +408,45 @@
       .recent-video-actions {
         flex-direction: column;
       }
+
+      .html-duration-picker-wrapper {
+        display: inline-flex !important;
+        width: auto !important;
+        gap: 32px;
+      }
+
+      .html-duration-picker-wrapper input {
+        width: 80px;
+        padding-right: revert;
+        text-align: center;
+      }
+
+      .html-duration-picker-wrapper .controlsDivStyle {
+        position: relative;
+        display: flex;
+        gap: 8px;
+        padding-top: 0;
+        margin: 0;
+        flex-direction: row-reverse;
+        margin-bottom: 0 !important;
+      }
+
+      .html-duration-picker-wrapper .controlsDivStyle button {
+        position: relative;
+        height: auto !important;
+        transform: none;
+        border-top: 3px solid #CCC;
+        border-right: 3px solid #CCC;
+        border-left: 4px solid rgb(117, 117, 117);
+        border-bottom: 4px solid rgb(80, 80, 80);
+        padding: 0.6rem 1rem;
+        border-radius: 8px;
+        top: 0 !important;
+      }
+
+      .html-duration-picker-wrapper .controlsDivStyle button .caretStyle {
+        margin: 0 !important;
+      }
     }
 
     @media only screen and (max-height: 600px) and (orientation: landscape) {
@@ -587,6 +626,26 @@
     let latestSavedNotes = '';
     let latestSavedLoopStartTime = 0;
     let latestSavedLoopEndTime = 0;
+
+    // override html-duration-picker buttons inline style
+    const overrideDurationPickerHeight = () => {
+      const durationPickerButtons = $('.html-duration-picker-wrapper .controlsDivStyle button');
+      if (!durationPickerButtons.length) {
+        setTimeout(overrideDurationPickerHeight, 500);
+        return;
+      }
+      const originalHeight = durationPickerButtons.eq(0).css('height');
+      const durationPickerButtonsDesktopHeightStyle = document.createElement('style');
+      durationPickerButtonsDesktopHeightStyle.innerHTML = `@media (min-width: 480px) { .html-duration-picker-wrapper .controlsDivStyle button { height: ${ originalHeight } !important; } }`;
+      document.body.appendChild(durationPickerButtonsDesktopHeightStyle);
+      durationPickerButtons.css('height', 'auto');
+      durationPickerButtons.click(function() {
+        setTimeout(() => {
+          $(this).parent().prev('input').blur();
+        });
+      });
+    };
+    overrideDurationPickerHeight();
 
     let db = firebase.firestore();
     // db.collection('videos').get().then(function(snapshots) {
